@@ -1,0 +1,10 @@
+[package]
+name = "junk"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = "0.15.0"
+bevy_prototype_lyon = "0.13.0"
+junk-unav = { path = "../junk-unav" }
+pyri_tooltip = "0.2.0"
