@@ -1,7 +1,6 @@
 use crate::{System, SystemId};
 use bevy_ecs::system::Resource;
-use nanoid::nanoid;
-use rand::SeedableRng;
+use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
 
 const X_MAX: isize = 256;
@@ -41,29 +40,20 @@ impl Connections {
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Clone)]
 pub struct UNav {
     pub systems: HashMap<SystemId, System>,
 }
 
 impl UNav {
     pub fn generate(random_seed: u32) -> UNav {
+        let mut system_seed = rand::rngs::StdRng::seed_from_u64(random_seed as u64);
         let positions = crate::poisson::sample(X_MAX, Y_MAX, 20.0, 30, random_seed as u64);
-        let mut system_propery_rng = rand::rngs::StdRng::seed_from_u64(random_seed as u64);
         let systems = positions
             .into_iter()
             .map(|point| {
-                let id = SystemId(nanoid!());
-                (
-                    id.clone(),
-                    System {
-                        id,
-                        position: (point.x - X_MAX / 2, point.y - Y_MAX / 2),
-                        properties: crate::system::SystemProperties::from_rngs(
-                            &mut system_propery_rng,
-                        ),
-                    },
-                )
+                let system = crate::system::System::new(system_seed.gen(), point);
+                (system.id.clone(), system)
             })
             .collect();
         UNav { systems }
@@ -74,8 +64,8 @@ impl UNav {
         for (from_id, from_node) in self.systems.iter() {
             for (to_id, to_node) in self.systems.iter() {
                 if from_id != to_id {
-                    let distance = ((from_node.position.0 - to_node.position.0).abs()
-                        + (from_node.position.1 - to_node.position.1).abs())
+                    let distance = ((from_node.position.x - to_node.position.x).abs()
+                        + (from_node.position.y - to_node.position.y).abs())
                         as usize;
                     if distance <= distance_filter {
                         connections.push(Connection {
@@ -97,7 +87,7 @@ impl UNav {
     pub fn get_most_central_system(&self) -> &System {
         self.systems
             .values()
-            .min_by_key(|system| system.position.0.abs() + system.position.1.abs())
+            .min_by_key(|system| system.position.x.abs() + system.position.y.abs())
             .unwrap()
     }
 }

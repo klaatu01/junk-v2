@@ -1,0 +1,10 @@
+[package]
+name = "junk-ship"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = "0.15.1"
+rand = "0.8.5"
+ron = "0.8.1"
+serde = { version = "1.0.217", features = ["derive"] }

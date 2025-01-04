@@ -1,13 +1,7 @@
-use rand::distributions::Uniform;
+use bevy::math::I64Vec2;
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::SeedableRng;
-
-#[derive(Clone, Copy, Debug)]
-pub struct Point2D {
-    pub x: isize,
-    pub y: isize,
-}
 
 /// Generate points using Poisson Disk Sampling with a seeded RNG,
 /// returning integer coordinates.
@@ -19,7 +13,7 @@ pub struct Point2D {
 /// - `seed`: seed for reproducible randomness.
 ///
 /// Returns a list of points (`Point2D`) within the `[0..width, 0..height]` range.
-pub fn sample(width: isize, height: isize, min_dist: f32, k: usize, seed: u64) -> Vec<Point2D> {
+pub fn sample(width: isize, height: isize, min_dist: f32, k: usize, seed: u64) -> Vec<I64Vec2> {
     // We'll do our distance math in float, but store final points as isize.
     let w_f = width as f32;
     let h_f = height as f32;
@@ -54,10 +48,7 @@ pub fn sample(width: isize, height: isize, min_dist: f32, k: usize, seed: u64) -
     let x0_f = rng.gen_range(0.0..w_f);
     let y0_f = rng.gen_range(0.0..h_f);
 
-    let p0 = Point2D {
-        x: x0_f as isize,
-        y: y0_f as isize,
-    };
+    let p0 = I64Vec2::new(x0_f as i64, y0_f as i64);
     points.push(p0);
 
     // Determine the cell of this initial point (in float, then as isize).
@@ -144,10 +135,7 @@ pub fn sample(width: isize, height: isize, min_dist: f32, k: usize, seed: u64) -
 
             // If it's sufficiently far from all neighbors, accept it
             if !too_close {
-                let new_point = Point2D {
-                    x: candidate_x,
-                    y: candidate_y,
-                };
+                let new_point = I64Vec2::new(candidate_x as i64, candidate_y as i64);
                 points.push(new_point);
                 let new_index = points.len() - 1;
 
@@ -168,4 +156,7 @@ pub fn sample(width: isize, height: isize, min_dist: f32, k: usize, seed: u64) -
     }
 
     points
+        .iter()
+        .map(|p| p.saturating_sub(I64Vec2::new((width / 2) as i64, (height / 2) as i64)))
+        .collect()
 }
