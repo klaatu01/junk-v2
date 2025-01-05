@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use bevy::{
-    asset::{AssetLoader, AssetLoaderError},
+    asset::{io::Reader, AssetLoader, LoadContext, LoadedFolder},
     prelude::*,
 };
 
@@ -11,16 +11,44 @@ mod ship;
 pub use parts::*;
 pub use ship::*;
 
-pub struct PartConfigAsset {
-    pub parts: Vec<PartInfo>,
+#[derive(Asset, TypePath, Debug)]
+pub struct PartsAsset {
+    pub name: String,
+    pub parts: Parts,
+}
+
+#[derive(Default)]
+pub struct PartsAssetLoader;
+
+impl AssetLoader for PartsAssetLoader {
+    type Asset = PartsAsset;
+    type Settings = ();
+    type Error = anyhow::Error;
+
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        _settings: &(),
+        load_context: &mut LoadContext<'_>,
+    ) -> Result<Self::Asset, Self::Error> {
+        let mut bytes = Vec::new();
+        reader.read_to_end(&mut bytes).await?;
+        let parts = Parts::load_parts_from_bytes(&bytes);
+        let name = load_context.path().to_str().unwrap().to_string();
+        Ok(PartsAsset { parts, name })
+    }
+
+    fn extensions(&self) -> &[&str] {
+        &["ron"]
+    }
 }
 
 #[derive(Resource)]
-pub struct PartsHandles {
-    pub parts: Vec<Handle<PartConfigAsset>>,
+pub struct PartsHandleState {
+    pub handle: Handle<LoadedFolder>,
 }
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct PartsResource {
     parts: HashSet<PartInfo>,
 }
@@ -35,23 +63,9 @@ impl PartsResource {
     pub fn all_parts(&self) -> &HashSet<PartInfo> {
         &self.parts
     }
-}
 
-pub struct PartsLoader;
-
-impl AssetLoader for PartsLoader {
-    type Asset = PartsResource;
-
-    fn from_bytes(
-        &self,
-        _asset_path: &AssetPath,
-        bytes: Vec<u8>,
-    ) -> Result<PartsResource, AssetLoaderError> {
-        let parts = Parts::load_parts_from_bytes(&bytes);
-    }
-
-    fn extensions(&self) -> &[&str] {
-        &["ron"]
+    pub(crate) fn add_parts(&mut self, parts: &HashSet<PartInfo>) {
+        self.parts.extend(parts.clone());
     }
 }
 
@@ -59,11 +73,35 @@ pub struct ShipPlugin;
 
 impl bevy::app::Plugin for ShipPlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        let parts_resource = PartsResource::load();
-        app.insert_resource(parts_resource)
-            .add_event::<SpawnShipEvent>()
-            .add_systems(PostStartup, player_startup)
-            .add_systems(Update, ship_spawner);
+        app.add_event::<SpawnShipEvent>()
+            .init_resource::<PartsResource>()
+            .init_asset::<PartsAsset>()
+            .init_asset_loader::<PartsAssetLoader>()
+            .add_systems(PostStartup, setup)
+            .add_systems(Update, ship_spawner)
+            .add_systems(Update, load_parts_resource)
+            .add_systems(Update, player_startup);
+    }
+}
+
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    println!("Loading parts assets");
+    let handle = asset_server.load_folder("parts");
+    commands.insert_resource(PartsHandleState { handle });
+    println!("Loaded parts assets");
+}
+
+fn load_parts_resource(
+    mut parts_resource: ResMut<PartsResource>,
+    mut parts_assets_event: EventReader<AssetEvent<PartsAsset>>,
+    assets: ResMut<Assets<PartsAsset>>,
+) {
+    for event in parts_assets_event.read() {
+        if let AssetEvent::Added { id } = event {
+            let asset = assets.get(*id).unwrap();
+            println!("Adding parts from asset {}", asset.name);
+            parts_resource.add_parts(&asset.parts.parts);
+        }
     }
 }
 
@@ -108,22 +146,33 @@ fn ship_spawner(
 fn build_ship(entity_commands: &mut EntityCommands, parts: &HashSet<PartInfo>, ship: &Ship) {
     for (position, part_id) in &ship.cells {
         let part = parts.iter().find(|p| p.id == part_id.part_id).unwrap();
-        let transform =
-            Transform::from_translation(Vec3::new(position.x as f32, position.y as f32, 0.0));
+        let transform = Transform::from_translation(Vec3::new(
+            position.x as f32 * 10.0,
+            position.y as f32 * 10.0,
+            0.0,
+        ));
         let sprite = Sprite {
-            custom_size: Some(Vec2::new(part.size.x as f32, part.size.y as f32)),
+            custom_size: Some(Vec2::new(
+                part.size.x as f32 * 10.0,
+                part.size.y as f32 * 10.0,
+            )),
             ..Default::default()
         };
         entity_commands.with_child((PartInfoComponent { part: part.clone() }, transform, sprite));
     }
 }
 
-fn player_startup(mut spawn_ship_event: EventWriter<SpawnShipEvent>) {
-    spawn_ship_event.send(SpawnShipEvent {
-        player: true,
-        position: Vec2::new(0.0, 0.0),
-        seed: 0,
-    });
+fn player_startup(
+    input: Res<ButtonInput<KeyCode>>,
+    mut spawn_ship_event: EventWriter<SpawnShipEvent>,
+) {
+    if input.just_pressed(KeyCode::Enter) {
+        spawn_ship_event.send(SpawnShipEvent {
+            player: true,
+            position: Vec2::new(0.0, 0.0),
+            seed: 15,
+        });
+    }
 }
 
 #[cfg(test)]

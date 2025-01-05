@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.95"
 bevy = "0.15.0"
 bevy_reflect = { version = "0.15.1", features = ["uuid"] }
 rand = "0.8.5"

@@ -88,7 +88,7 @@ impl Ship {
         let id = ShipId::generate(&mut rng);
 
         let mut ship = Ship::new(id);
-        let sizes = [3, 10, 30, 50];
+        let sizes = [30, 50];
         ship.random(seed, parts, *sizes.choose(&mut rng).unwrap());
         ship
     }
