@@ -1,0 +1,61 @@
+Parts(
+    sprite_sheet: "stock.png",
+    parts: [
+        (
+            id: 1,
+            name: "Basic Cockpit",
+            size: (1, 2),
+            properties: (
+              part_type: Cockpit (crew_capacity: 1),
+              weight: 1,
+            ),
+            connector_points: {
+                (0, 0): [Down],
+            },
+            mount_points: [],
+            uv: (0, 0, 32, 64),
+        ),
+        (
+            id: 2,
+            name: "Hull Block",
+            size: (1, 1),
+            properties: (
+              part_type: Hull (armor: 1, cargo_capacity: 16),
+              weight: 2,
+            ),
+            connector_points: {
+                (0, 0): [Down, Up, Left, Right]
+            },
+            mount_points: [(0, 0)],
+            uv: (32, 0, 32, 32),
+        ),
+        (
+            id: 3,
+            name: "Cargo Hold",
+            size: (1, 1),
+            properties: (
+              part_type: Cargo (cargo_capacity: 64 ),
+              weight: 1,
+            ),
+            connector_points: {
+                (0, 0): [Up, Down]
+            },
+            mount_points: [],
+            uv: (64, 0, 32, 32),
+        ),
+        (
+            id: 4,
+            name: "Engine",
+            size: (1, 1),
+            properties: (
+              part_type: Engine (thrust:75),
+              weight: 5,
+            ),
+            connector_points: {
+                (0, 0): [Up]
+            },
+            mount_points: [],
+            uv: (96, 0, 32, 32),
+        ),
+    ],
+)

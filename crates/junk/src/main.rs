@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use junk_ship::{ShipPlugin, SpawnShipEvent};
 use junk_unav::{ToggleUNav, UNavPlugin};
 
 #[derive(Resource, Clone)]
@@ -17,6 +18,7 @@ fn main() {
     App::new()
         .insert_resource(Focus::Game)
         .add_plugins(UNavPlugin::generate(19940131))
+        .add_plugins(ShipPlugin)
         .add_event::<FocusChanged>()
         .add_systems(Update, focus_systems)
         .add_systems(Update, on_focus_changed)

@@ -2440,8 +2440,8 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_prototype_lyon",
+ "junk-ship",
  "junk-unav",
- "pyri_tooltip",
 ]
 
 [[package]]
@@ -2449,6 +2449,7 @@ name = "junk-ship"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_reflect",
  "rand",
  "ron",
  "serde",
@@ -3368,30 +3369,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "afbdc74edc00b6f6a218ca6a5364d6226a259d4b8ea1af4a0ea063f27e179f4d"
 
 [[package]]
-name = "pyri_tooltip"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2dee0fe73e9ca36d38624ba2a0572b7cd2656142960a2702c8e22bafc07afc96"
-dependencies = [
- "bevy_app",
- "bevy_asset",
- "bevy_color",
- "bevy_core",
- "bevy_ecs",
- "bevy_hierarchy",
- "bevy_math",
- "bevy_reflect",
- "bevy_render",
- "bevy_sprite",
- "bevy_text",
- "bevy_time",
- "bevy_transform",
- "bevy_ui",
- "bevy_window",
- "tiny_bail",
-]
-
-[[package]]
 name = "quote"
 version = "1.0.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3929,15 +3906,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tiny_bail"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "425cf2e86c5941892b64bcf4a89cc1b468c754ef4946d15a7244a17205e7424d"
-dependencies = [
- "tracing",
-]
-
-[[package]]
 name = "tinyvec"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3975,7 +3943,6 @@ version = "0.1.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "784e0ac535deb450455cbfa28a6f0df145ea1bb7ae51b821cf5e7927fdcfbdd0"
 dependencies = [
- "log",
  "pin-project-lite",
  "tracing-attributes",
  "tracing-core",
