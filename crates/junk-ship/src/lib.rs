@@ -3,11 +3,15 @@ use std::collections::HashSet;
 use bevy::{
     asset::{io::Reader, AssetLoader, LoadContext, LoadedFolder},
     prelude::*,
+    sprite::Material2dPlugin,
 };
 
+mod mesh;
+mod outline;
 mod parts;
 mod ship;
 
+use outline::SpriteOutlineMaterial;
 pub use parts::*;
 pub use ship::*;
 
@@ -77,6 +81,7 @@ impl bevy::app::Plugin for ShipPlugin {
             .init_resource::<PartsResource>()
             .init_asset::<PartsAsset>()
             .init_asset_loader::<PartsAssetLoader>()
+            .add_plugins(Material2dPlugin::<SpriteOutlineMaterial>::default())
             .add_systems(PostStartup, setup)
             .add_systems(Update, ship_spawner)
             .add_systems(Update, load_parts_resource)
@@ -128,7 +133,10 @@ pub struct PartInfoComponent {
 fn ship_spawner(
     mut commands: Commands,
     parts_resource: Res<PartsResource>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<SpriteOutlineMaterial>>,
     mut spawn_ship_event: EventReader<SpawnShipEvent>,
+    asset_server: Res<AssetServer>,
 ) {
     for event in spawn_ship_event.read() {
         let ship = Ship::generate(event.seed, parts_resource.all_parts());
@@ -139,27 +147,38 @@ fn ship_spawner(
         if event.player {
             entity_commands.insert(PlayerShip);
         }
-        build_ship(&mut entity_commands, parts_resource.all_parts(), &ship);
+        build_ship(
+            &mut entity_commands,
+            &mut meshes,
+            &mut materials,
+            &asset_server,
+            parts_resource.all_parts(),
+            &ship,
+        );
     }
 }
 
-fn build_ship(entity_commands: &mut EntityCommands, parts: &HashSet<PartInfo>, ship: &Ship) {
-    for (position, part_id) in &ship.cells {
-        let part = parts.iter().find(|p| p.id == part_id.part_id).unwrap();
-        let transform = Transform::from_translation(Vec3::new(
-            position.x as f32 * 10.0,
-            position.y as f32 * 10.0,
-            0.0,
-        ));
-        let sprite = Sprite {
-            custom_size: Some(Vec2::new(
-                part.size.x as f32 * 10.0,
-                part.size.y as f32 * 10.0,
-            )),
-            ..Default::default()
-        };
-        entity_commands.with_child((PartInfoComponent { part: part.clone() }, transform, sprite));
-    }
+fn build_ship(
+    entity_commands: &mut EntityCommands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<SpriteOutlineMaterial>>,
+    asset_server: &Res<AssetServer>,
+    parts: &HashSet<PartInfo>,
+    ship: &Ship,
+) {
+    let ship_mesh = ship.mesh(parts);
+    let mesh = meshes.add(ship_mesh);
+
+    let texture_handle = asset_server.load("textures/ship_dev.png");
+
+    let material = materials.add(SpriteOutlineMaterial {
+        color: Vec4::new(1.0, 1.0, 1.0, 1.0),         // White tint
+        outline_color: Vec4::new(0.0, 0.0, 0.0, 1.0), // Black outline
+        outline_thickness: 0.005,                     // Adjust based on texture size
+        main_texture: texture_handle.clone(),
+    });
+
+    entity_commands.with_child((Mesh2d(mesh), MeshMaterial2d(material)));
 }
 
 fn player_startup(

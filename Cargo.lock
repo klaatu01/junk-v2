@@ -2445,6 +2445,7 @@ name = "junk"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_pbr",
  "bevy_prototype_lyon",
  "junk-ship",
  "junk-unav",
@@ -2456,6 +2457,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bevy",
+ "bevy_mesh",
  "bevy_reflect",
  "rand",
  "ron",

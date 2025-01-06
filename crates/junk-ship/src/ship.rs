@@ -3,14 +3,15 @@ use std::{
     fmt::{Display, Formatter},
 };
 
-use bevy::math::I8Vec2;
+use bevy::math::{I8Vec2, IVec2, UVec2};
+use bevy_mesh::Mesh;
 use rand::{
     rngs::StdRng,
     seq::{IteratorRandom, SliceRandom},
     Rng, SeedableRng,
 };
 
-use crate::parts::*;
+use crate::{mesh::MeshPart, parts::*};
 
 pub const SHIP_ID_ALPHABET: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 pub const SHIP_ID_LENGTH: usize = 6;
@@ -239,6 +240,27 @@ impl Ship {
             thrust,
             weight,
         }
+    }
+
+    pub fn mesh(&self, parts: &HashSet<PartInfo>) -> Mesh {
+        let mut mesh_parts = Vec::new();
+
+        for (position, part) in self.cells.iter() {
+            let part_info = parts.iter().find(|p| p.id == part.part_id).unwrap();
+            let size = UVec2::new(part_info.size.x as u32, part_info.size.y as u32);
+            let uv_position = UVec2::new(part_info.uv.0, part_info.uv.1);
+            let uv_size = UVec2::new(part_info.uv.2, part_info.uv.3);
+            let position = IVec2::new(position.x as i32, position.y as i32);
+
+            mesh_parts.push(MeshPart {
+                position,
+                size,
+                uv_position,
+                uv_size,
+            });
+        }
+
+        crate::mesh::generate_mesh(mesh_parts)
     }
 
     pub fn print_ascii(&self, parts: &HashSet<PartInfo>) {
