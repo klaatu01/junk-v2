@@ -17,6 +17,7 @@ pub struct FocusChanged {
 fn main() {
     App::new()
         .insert_resource(Focus::Game)
+        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_plugins(UNavPlugin::generate(19940131))
         .add_plugins(ShipPlugin)
         .add_event::<FocusChanged>()

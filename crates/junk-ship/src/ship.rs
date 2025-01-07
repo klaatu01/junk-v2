@@ -89,7 +89,9 @@ impl Ship {
         let id = ShipId::generate(&mut rng);
 
         let mut ship = Ship::new(id);
-        let sizes = [30, 50];
+        let sizes = [
+            4, 8, 10, 12, 16, 20, 24, 28, 30, 32, 36, 40, 44, 48, 52, 56, 60, 160,
+        ];
         ship.random(seed, parts, *sizes.choose(&mut rng).unwrap());
         ship
     }
@@ -130,7 +132,9 @@ impl Ship {
                     _ => |x: &PartType| matches!(x, PartType::Hull { .. }),
                 };
 
-                if let Some(p) = Ship::find_part_with_direction(parts, inverted, target_part) {
+                if let Some(p) =
+                    Ship::find_part_with_direction(&mut rng, parts, inverted, target_part)
+                {
                     part = p.clone();
                     break;
                 } else {
@@ -176,15 +180,18 @@ impl Ship {
     }
 
     pub fn find_part_with_direction(
+        rand: &mut StdRng,
         parts: &HashSet<PartInfo>,
         direction: Direction,
         type_filter: impl Fn(&PartType) -> bool,
-    ) -> Option<&PartInfo> {
-        parts.iter().find(|p| {
+    ) -> Option<PartInfo> {
+        let parts = parts.iter().filter(|p| {
             p.connector_points.iter().any(|(_, directions)| {
                 directions.contains(&direction) && type_filter(&p.properties.part_type)
             })
-        })
+        });
+        let part = parts.choose(rand);
+        part.cloned()
     }
 
     pub fn get_directions(&self, current: I8Vec2, parts: &HashSet<PartInfo>) -> Vec<Direction> {

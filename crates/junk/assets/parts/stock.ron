@@ -1,10 +1,10 @@
 Parts(
-    sprite_sheet: "stock.png",
+    sprite_sheet: "ship_dev_v2.png",
     parts: [
         (
             id: 1,
             name: "Basic Cockpit",
-            size: (1, 2),
+            size: (1, 1),
             properties: (
               part_type: Cockpit (crew_capacity: 1),
               weight: 1,
@@ -13,7 +13,7 @@ Parts(
                 (0, 0): [Down],
             },
             mount_points: [],
-            uv: (0, 0, 32, 64),
+            uv: (0, 1, 32, 32),
         ),
         (
             id: 2,
@@ -27,10 +27,38 @@ Parts(
                 (0, 0): [Down, Up, Left, Right]
             },
             mount_points: [(0, 0)],
-            uv: (32, 0, 32, 32),
+            uv: (0, 0, 32, 32),
         ),
         (
             id: 3,
+            name: "DR Angled Hull Block",
+            size: (1, 1),
+            properties: (
+              part_type: Hull (armor: 1, cargo_capacity: 8),
+              weight: 2,
+            ),
+            connector_points: {
+                (0, 0): [Down, Left]
+            },
+            mount_points: [(0, 0)],
+            uv: (1, 0, 32, 32),
+        ),
+        (
+            id: 4,
+            name: "DL Angled Hull Block",
+            size: (1, 1),
+            properties: (
+              part_type: Hull (armor: 1, cargo_capacity: 8),
+              weight: 2,
+            ),
+            connector_points: {
+                (0, 0): [Down, Right]
+            },
+            mount_points: [(0, 0)],
+            uv: (2, 0, 32, 32),
+        ),
+        (
+            id: 5,
             name: "Cargo Hold",
             size: (1, 1),
             properties: (
@@ -41,10 +69,10 @@ Parts(
                 (0, 0): [Up, Down]
             },
             mount_points: [],
-            uv: (64, 0, 32, 32),
+            uv: (4, 0, 32, 32),
         ),
         (
-            id: 4,
+            id: 6,
             name: "Engine",
             size: (1, 1),
             properties: (
@@ -55,7 +83,7 @@ Parts(
                 (0, 0): [Up]
             },
             mount_points: [],
-            uv: (96, 0, 32, 32),
+            uv: (3, 0, 32, 32),
         ),
     ],
 )

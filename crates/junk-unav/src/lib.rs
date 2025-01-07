@@ -40,7 +40,6 @@ impl Plugin for UNavPlugin {
             .add_event::<ToggleUNav>()
             .add_event::<HoveredSystemEvent>()
             .add_event::<UnhoveredSystemEvent>()
-            .add_plugins(DefaultPlugins)
             .add_plugins(ShapePlugin)
             .add_systems(Startup, setup_camera)
             .add_systems(Startup, spawn_systems)

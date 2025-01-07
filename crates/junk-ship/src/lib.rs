@@ -13,6 +13,7 @@ mod ship;
 
 use outline::SpriteOutlineMaterial;
 pub use parts::*;
+use rand::Rng;
 pub use ship::*;
 
 #[derive(Asset, TypePath, Debug)]
@@ -169,7 +170,7 @@ fn build_ship(
     let ship_mesh = ship.mesh(parts);
     let mesh = meshes.add(ship_mesh);
 
-    let texture_handle = asset_server.load("textures/ship_dev.png");
+    let texture_handle = asset_server.load("textures/ship_dev_v2.png");
 
     let material = materials.add(SpriteOutlineMaterial {
         color: Vec4::new(1.0, 1.0, 1.0, 1.0),         // White tint
@@ -191,6 +192,18 @@ fn player_startup(
             position: Vec2::new(0.0, 0.0),
             seed: 15,
         });
+
+        for i in 0..40 {
+            let mut rand = rand::thread_rng();
+            spawn_ship_event.send(SpawnShipEvent {
+                player: false,
+                position: Vec2::new(
+                    rand.gen_range(-2500.0..2500.0),
+                    rand.gen_range(-1000.0..1000.0),
+                ),
+                seed: i,
+            });
+        }
     }
 }
 

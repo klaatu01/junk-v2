@@ -12,6 +12,8 @@ pub struct MeshPart {
 }
 
 pub const MESH_MULTIPLIER: f32 = 16.0;
+pub const TEXTURE_SIZE: f32 = 512.0;
+pub const OFFSET_SIZE: f32 = 2.0;
 
 pub fn generate_mesh(mesh_parts: Vec<MeshPart>) -> Mesh {
     let mut positions: Vec<[f32; 3]> = Vec::new();
@@ -19,6 +21,8 @@ pub fn generate_mesh(mesh_parts: Vec<MeshPart>) -> Mesh {
     let mut indices: Vec<u32> = Vec::new();
 
     let mut vertex_count = 0u32;
+
+    let offset: f32 = OFFSET_SIZE / 512.0;
 
     for part in mesh_parts.iter() {
         let x = part.position.x as f32 * MESH_MULTIPLIER;
@@ -33,15 +37,30 @@ pub fn generate_mesh(mesh_parts: Vec<MeshPart>) -> Mesh {
 
         positions.extend_from_slice(&[bottom_left, bottom_right, top_right, top_left]);
 
-        let u = part.uv_position.x as f32;
-        let v = part.uv_position.y as f32;
-        let uv_width = part.uv_size.x as f32;
-        let uv_height = part.uv_size.y as f32;
+        let uv_width = part.uv_size.x as f32 / TEXTURE_SIZE;
+        let uv_height = part.uv_size.y as f32 / TEXTURE_SIZE;
 
-        let uv_bottom_left = [u, v];
-        let uv_bottom_right = [u + uv_width, v];
-        let uv_top_right = [u + uv_width, v + uv_height];
-        let uv_top_left = [u, v + uv_height];
+        println!("UV Size: {:?} {:?}", uv_width, uv_height);
+
+        let x_offset: f32 = offset + (part.uv_position.x as f32 * offset * 2.0);
+        let y_offset: f32 = offset + (part.uv_position.y as f32 * offset * 2.0);
+
+        println!("Offset: {:?} {:?}", x_offset, y_offset);
+
+        let u = (part.uv_position.x as f32 * part.uv_size.x as f32) / TEXTURE_SIZE + x_offset;
+        let v = (part.uv_position.y as f32 * part.uv_size.y as f32) / TEXTURE_SIZE + y_offset;
+
+        println!("UV: {:?} {:?}", u, v);
+
+        let uv_top_left = [u, v];
+        let uv_top_right = [u + uv_width, v];
+        let uv_bottom_right = [u + uv_width, v + uv_height];
+        let uv_bottom_left = [u, v + uv_height];
+
+        println!(
+            "UV: {:?} {:?} {:?} {:?}",
+            uv_top_left, uv_top_right, uv_bottom_right, uv_bottom_left
+        );
 
         uvs.extend_from_slice(&[uv_bottom_left, uv_bottom_right, uv_top_right, uv_top_left]);
 
