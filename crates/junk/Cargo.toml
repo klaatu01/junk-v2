@@ -8,4 +8,5 @@ bevy = "0.15.0"
 bevy_prototype_lyon = "0.13.0"
 junk-unav = { path = "../junk-unav" }
 junk-ship = { path = "../junk-ship" }
+junk-world = { path = "../junk-world" }
 bevy_pbr = "0.15.1"

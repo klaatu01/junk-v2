@@ -5,11 +5,14 @@ use std::{
 
 use bevy::math::{I8Vec2, IVec2, UVec2};
 use bevy_mesh::Mesh;
+use cellular_automata::CellType;
 use rand::{
     rngs::StdRng,
     seq::{IteratorRandom, SliceRandom},
     Rng, SeedableRng,
 };
+
+mod cellular_automata;
 
 use crate::{mesh::MeshPart, parts::*};
 
@@ -87,13 +90,85 @@ impl Ship {
     pub fn generate(seed: u64, parts: &HashSet<PartInfo>) -> Self {
         let mut rng = StdRng::seed_from_u64(seed);
         let id = ShipId::generate(&mut rng);
+        Ship::new(id).cellular(seed, parts)
+    }
 
-        let mut ship = Ship::new(id);
-        let sizes = [
-            4, 8, 10, 12, 16, 20, 24, 28, 30, 32, 36, 40, 44, 48, 52, 56, 60, 160,
-        ];
-        ship.random(seed, parts, *sizes.choose(&mut rng).unwrap());
-        ship
+    pub fn cellular(mut self, seed: u64, parts: &HashSet<PartInfo>) -> Self {
+        let mut rng = StdRng::seed_from_u64(seed);
+        let mut automata = cellular_automata::Automata::new();
+        automata.run(7);
+
+        let cells = automata.get_non_empty();
+        let lookup = cells.clone();
+
+        let directions = |x: usize, y: usize| -> Vec<Direction> {
+            let mut directions = Vec::new();
+            if let Some(_) = lookup.get(&(x, y + 1)) {
+                directions.push(Direction::Up);
+            }
+            if let Some(_) = lookup.get(&(x, y - 1)) {
+                directions.push(Direction::Down);
+            }
+            if let Some(_) = lookup.get(&(x - 1, y)) {
+                directions.push(Direction::Left);
+            }
+            if let Some(_) = lookup.get(&(x + 1, y)) {
+                directions.push(Direction::Right);
+            }
+            directions
+        };
+
+        for (position, part) in cells.iter() {
+            match part {
+                CellType::Cockpit => {
+                    self.place_part(
+                        parts
+                            .iter()
+                            .find(|p| matches!(p.properties.part_type, PartType::Cockpit { .. }))
+                            .unwrap(),
+                        I8Vec2::new(
+                            position.0.try_into().unwrap(),
+                            position.1.try_into().unwrap(),
+                        ),
+                    );
+                }
+                CellType::Hull => {
+                    let directions = directions(position.0, position.1);
+                    let part = Ship::find_parts_with_only_directions(parts, directions);
+                    if !part.is_empty() {
+                        let part = part.choose(&mut rng).unwrap();
+                        self.place_part(
+                            part,
+                            I8Vec2::new(
+                                position.0.try_into().unwrap(),
+                                position.1.try_into().unwrap(),
+                            ),
+                        );
+                    } else {
+                        let part = Ship::find_parts_with_only_directions(
+                            parts,
+                            vec![
+                                Direction::Up,
+                                Direction::Down,
+                                Direction::Left,
+                                Direction::Right,
+                            ],
+                        );
+                        let part = part.choose(&mut rng).unwrap();
+                        self.place_part(
+                            part,
+                            I8Vec2::new(
+                                position.0.try_into().unwrap(),
+                                position.1.try_into().unwrap(),
+                            ),
+                        );
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        self
     }
 
     pub fn random(&mut self, seed: u64, parts: &HashSet<PartInfo>, parts_count: usize) {
@@ -185,13 +260,37 @@ impl Ship {
         direction: Direction,
         type_filter: impl Fn(&PartType) -> bool,
     ) -> Option<PartInfo> {
-        let parts = parts.iter().filter(|p| {
-            p.connector_points.iter().any(|(_, directions)| {
-                directions.contains(&direction) && type_filter(&p.properties.part_type)
-            })
-        });
+        let parts = parts
+            .iter()
+            .filter(
+                // not a cockpit
+                |p| !matches!(p.properties.part_type, PartType::Cockpit { .. }),
+            )
+            .filter(|p| {
+                p.connector_points.iter().any(|(_, directions)| {
+                    directions.contains(&direction) && type_filter(&p.properties.part_type)
+                })
+            });
         let part = parts.choose(rand);
         part.cloned()
+    }
+
+    pub fn find_parts_with_only_directions(
+        parts: &HashSet<PartInfo>,
+        directions: Vec<Direction>,
+    ) -> Vec<PartInfo> {
+        let parts = parts
+            .iter()
+            .filter(|p| {
+                p.connector_points.iter().all(|(_, part_directions)| {
+                    part_directions.iter().all(|d| directions.contains(d))
+                })
+            })
+            .filter(|p| {
+                // not a cockpit
+                !matches!(p.properties.part_type, PartType::Cockpit { .. })
+            });
+        parts.cloned().collect()
     }
 
     pub fn get_directions(&self, current: I8Vec2, parts: &HashSet<PartInfo>) -> Vec<Direction> {

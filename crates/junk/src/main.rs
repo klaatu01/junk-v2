@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use junk_ship::{ShipPlugin, SpawnShipEvent};
 use junk_unav::{ToggleUNav, UNavPlugin};
+use junk_world::WorldPlugin;
 
 #[derive(Resource, Clone)]
 pub enum Focus {
@@ -20,6 +21,7 @@ fn main() {
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_plugins(UNavPlugin::generate(19940131))
         .add_plugins(ShipPlugin)
+        .add_plugins(WorldPlugin)
         .add_event::<FocusChanged>()
         .add_systems(Update, focus_systems)
         .add_systems(Update, on_focus_changed)

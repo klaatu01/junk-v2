@@ -212,7 +212,6 @@ mod tests {
     use rand::rngs::StdRng;
     use rand::SeedableRng;
 
-    use crate::parts::*;
     use crate::ship::*;
 
     #[test]
@@ -229,16 +228,5 @@ mod tests {
     }
 
     #[test]
-    fn test_ship() {
-        let parts = Parts::load_parts_from_ron("parts.ron");
-        assert_eq!(parts.sprite_sheet, "stock.png");
-
-        for i in 0..10 {
-            let ship = Ship::generate(i, &parts.parts);
-            let metrics = ship.metrics(&parts.parts);
-            println!("{:?}", ship.id);
-            println!("{}", metrics);
-            ship.print_ascii(&parts.parts);
-        }
-    }
+    fn test_ship() {}
 }

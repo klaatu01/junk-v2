@@ -2449,6 +2449,7 @@ dependencies = [
  "bevy_prototype_lyon",
  "junk-ship",
  "junk-unav",
+ "junk-world",
 ]
 
 [[package]]
@@ -2474,6 +2475,14 @@ dependencies = [
  "bevy_prototype_lyon",
  "nanoid",
  "noise",
+ "rand",
+]
+
+[[package]]
+name = "junk-world"
+version = "0.1.0"
+dependencies = [
+ "bevy",
  "rand",
 ]
 
